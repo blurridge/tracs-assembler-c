@@ -21,17 +21,12 @@ const INSTRUCTION INSTRUCTION_TO_HEX_VALUES[] = {
 
 int assembleToC(char **assembledLines, char **extractedLines, int numLines)
 {
-    int i;
     int eopExists = checkIfEOPExists(extractedLines, numLines);
     unsigned int startingAddress = getStartingAddress(extractedLines, numLines);
     if (eopExists && startingAddress < 0xFFFF)
     {
         char **branchKeys = malloc(numLines * sizeof(char *));
         int numAssembledLines = convertAsmToC(assembledLines, extractedLines, numLines, startingAddress);
-        for (i = 0; i < numAssembledLines; i++)
-        {
-            printf("%s\n", assembledLines[i]);
-        }
         return numAssembledLines;
     }
     else
@@ -88,7 +83,7 @@ unsigned int getStartingAddress(char **extractedLines, int numLines)
 
 int convertAsmToC(char **assembledLines, char **extractedLines, int numLines, unsigned int startingAddress)
 {
-    int i, j, k, numAssembledLines = 0;
+    int i, j, numAssembledLines = 0;
 
     unsigned int *currentAddress = &startingAddress;
     char *token;
@@ -152,7 +147,7 @@ int checkValidAddress(char *instruction, unsigned int operand)
 {
     if (strcmp(instruction, "WIO") == 0 || strcmp(instruction, "RIO") == 0)
     {
-        return operand >= 0x000 && operand <= 0x01F;
+        return operand <= 0x01F;
     }
     else if (strcmp(instruction, "WM") == 0 || strcmp(instruction, "RM") == 0)
     {
