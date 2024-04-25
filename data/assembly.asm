@@ -1,4 +1,4 @@
-ORG 0x010
+ORG 0x10
 start   WB 0x05 ; write 0x05 to MBR
         WM 0x400 ; write data on MBR to memory at address 0x400
         WB 0x03 ; write 0x03 to MBR

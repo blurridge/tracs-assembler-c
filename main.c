@@ -1,18 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "assembler.h"
 #define FILE_PATH "./data/assembly.asm"
 
 int getLinesFromFile(FILE *currentFile, char **lines);
 
 int main()
 {
+    int numLines = 0;
+    int conversionStatus;
     char *lines[1024];
     FILE *currentFile = fopen(FILE_PATH, "r");
-    int numLines = getLinesFromFile(currentFile, lines);
+    numLines = getLinesFromFile(currentFile, lines);
     if (numLines > 0)
     {
-        char assembledLines[numLines][1024];
+        char **assembledLines = malloc(numLines * sizeof(char*));
+        conversionStatus = assembleToC(assembledLines, lines, numLines);
     }
     else
     {
