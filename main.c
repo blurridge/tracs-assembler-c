@@ -3,6 +3,7 @@
 #include <string.h>
 #include "assembler.h"
 #define FILE_PATH "./data/assembly.asm"
+#define OUTPUT_PATH "./output/assembled.txt"
 
 int getLinesFromFile(FILE *currentFile, char **lines);
 
@@ -15,8 +16,31 @@ int main()
     numLines = getLinesFromFile(currentFile, lines);
     if (numLines > 0)
     {
-        char **assembledLines = malloc(numLines * sizeof(char*));
+        char **assembledLines = malloc(numLines * sizeof(char *));
         conversionStatus = assembleToC(assembledLines, lines, numLines);
+        if (conversionStatus)
+        {
+            FILE *file = fopen(OUTPUT_PATH, "w");
+            if (file == NULL)
+            {
+                perror("Failed to open file");
+                return 1;
+            }
+
+            // Write each string to the file
+
+            for (int i = 0; i < conversionStatus; i++)
+            {
+                fprintf(file, "%s\n", assembledLines[i]); // Adds a newline after each string
+            }
+
+            // Close the file
+            fclose(file);
+        }
+        else
+        {
+            printf("[ERROR] Error assembling %s.\n", FILE_PATH);
+        }
     }
     else
     {
