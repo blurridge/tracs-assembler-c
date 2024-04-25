@@ -25,7 +25,6 @@ int assembleToC(char **assembledLines, char **extractedLines, int numLines)
     unsigned int startingAddress = getStartingAddress(extractedLines, numLines);
     if (eopExists && startingAddress < 0xFFFF)
     {
-        char **branchKeys = malloc(numLines * sizeof(char *)); // Unused but breaks program on Windows if removed.
         int numAssembledLines = convertAsmToC(assembledLines, extractedLines, numLines, startingAddress);
         return numAssembledLines;
     }

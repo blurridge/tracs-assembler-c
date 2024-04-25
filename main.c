@@ -16,7 +16,7 @@ int main()
     numLines = getLinesFromFile(currentFile, lines);
     if (numLines > 0)
     {
-        char **assembledLines = malloc(numLines * sizeof(char *));
+        char **assembledLines = malloc(2 * numLines * sizeof(char *));
         if (assembledLines == NULL)
         {
             // If malloc fails, handle the memory allocation failure
