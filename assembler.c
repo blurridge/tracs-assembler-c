@@ -86,11 +86,11 @@ int convertAsmToC(char **assembledLines, char **extractedLines, int numLines, un
     int i, j, numAssembledLines = 0;
 
     unsigned int *currentAddress = &startingAddress;
+    int validAddress = 1;
     char *token;
     char tempLine[256];
     for (i = 1; i < numLines; i++)
     {
-        int validAddress = 1;
         unsigned int instruction, operand;
         strcpy(tempLine, extractedLines[i]);
         token = strtok(tempLine, " \t");
@@ -130,6 +130,7 @@ int convertAsmToC(char **assembledLines, char **extractedLines, int numLines, un
                     else
                     {
                         free(assembledLines);
+                        assembledLines = NULL;
                         return 0;
                     }
                 }

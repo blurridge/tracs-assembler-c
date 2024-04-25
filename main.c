@@ -17,6 +17,12 @@ int main()
     if (numLines > 0)
     {
         char **assembledLines = malloc(numLines * sizeof(char *));
+        if (assembledLines == NULL)
+        {
+            // If malloc fails, handle the memory allocation failure
+            fprintf(stderr, "Error: Memory allocation for assembledLines failed.\n");
+            return 1; // Return an error code or handle it as needed
+        }
         conversionStatus = assembleToC(assembledLines, lines, numLines);
         if (conversionStatus)
         {
@@ -36,6 +42,7 @@ int main()
 
             // Close the file
             fclose(file);
+            printf("[SUCCESS] Done assembling %s!\n", FILE_PATH);
         }
         else
         {
