@@ -3,8 +3,6 @@
 #include <string.h>
 #include "assembler.h"
 
-// data memory start address is implied to be at 0x400 until 0x7FF and I/O memory is at 0x000 to 0x01F (WIO, RIO)
-
 typedef struct
 {
     unsigned char opcode;
@@ -29,13 +27,11 @@ int assembleToC(char **assembledLines, char **extractedLines, int numLines)
     if (eopExists && startingAddress < 0xFFFF)
     {
         char **branchKeys = malloc(numLines * sizeof(char *));
-        unsigned int *branchValues = malloc(numLines * sizeof(unsigned int));
-        int numBranches = getBranches(extractedLines, numLines, branchKeys, branchValues, startingAddress);
-        int numAssembledLines = convertAsmToC(assembledLines, extractedLines, numLines, numBranches, branchKeys, branchValues, startingAddress);
-        // for (i = 0; i < numAssembledLines; i++)
-        // {
-        //     printf("%s\n", assembledLines[i]);
-        // }
+        int numAssembledLines = convertAsmToC(assembledLines, extractedLines, numLines, startingAddress);
+        for (i = 0; i < numAssembledLines; i++)
+        {
+            printf("%s\n", assembledLines[i]);
+        }
         return numAssembledLines;
     }
     else
@@ -90,41 +86,7 @@ unsigned int getStartingAddress(char **extractedLines, int numLines)
     return startingAddress;
 }
 
-int getBranches(char **extractedLines, int numLines, char **branchKeys, unsigned int *branchValues, unsigned int startingAddress)
-{
-    int i, j, numBranches = 0;
-    char *token;
-    char tempLine[256];
-    for (i = 0; i < numLines; i++)
-    {
-        strcpy(tempLine, extractedLines[i]);
-        token = strtok(tempLine, " \t");
-        int matchFlag = 0;
-        if (token != NULL)
-        {
-            // Check if the token is in the INSTRUCTION_TO_HEX_KEYS array
-            for (j = 0; j < NUM_INSTRUCTIONS; j++)
-            {
-                if (strcmp(token, INSTRUCTION_TO_HEX_KEYS[j]) == 0 || strcmp(token, "ORG") == 0)
-                {
-                    matchFlag = 1;
-                    break;
-                }
-            }
-            if (!matchFlag)
-            {
-                branchKeys[numBranches] = strdup(token);
-                branchValues[numBranches] = startingAddress;
-                numBranches++;
-            }
-            matchFlag = 0;
-        }
-        startingAddress += 2;
-    }
-    return numBranches;
-}
-
-int convertAsmToC(char **assembledLines, char **extractedLines, int numLines, int numBranches, char **branchKeys, unsigned int *branchValues, unsigned int startingAddress)
+int convertAsmToC(char **assembledLines, char **extractedLines, int numLines, unsigned int startingAddress)
 {
     int i, j, k, numAssembledLines = 0;
 
@@ -153,36 +115,28 @@ int convertAsmToC(char **assembledLines, char **extractedLines, int numLines, in
                     char *stringOperand = strtok(NULL, " \t");
                     int parsed = sscanf(stringOperand, "%x", &operand);
                     validAddress = checkValidAddress(token, operand);
-                    if (INSTRUCTION_TO_HEX_VALUES[j].needs_adding && parsed == 1)
+                    if (validAddress)
                     {
-                        unsigned int current_instruction = (instruction << 8) + operand;
-                        instruction = (current_instruction >> 8) & 0xFF;
-                        operand = current_instruction & 0xFF;
+                        if (INSTRUCTION_TO_HEX_VALUES[j].needs_adding && parsed == 1)
+                        {
+                            unsigned int current_instruction = (instruction << 8) + operand;
+                            instruction = (current_instruction >> 8) & 0xFF;
+                            operand = current_instruction & 0xFF;
+                        }
+                        else if (parsed != 1)
+                        {
+                            operand = findBranch(stringOperand, extractedLines, currentAddress, numLines, i);
+                        }
+                        token = NULL;
+                        assembledLines[numAssembledLines++] = getInstructionString(instruction, currentAddress);
+                        assembledLines[numAssembledLines++] = getInstructionString(operand, currentAddress);
+                        break;
                     }
-                    else if (parsed != 1)
+                    else
                     {
-                        int found = 0;
-                        for (k = 0; k < numBranches; k++)
-                        {
-                            if (strcmp(stringOperand, branchKeys[k]) == 0)
-                            {
-                                operand = branchValues[k];
-                                found = 1;
-                                break;
-                            }
-                        }
-                        if (!found)
-                        {
-                            operand = 0x00;
-                        }
+                        free(assembledLines);
+                        return 0;
                     }
-                    token = NULL;
-                    assembledLines[numAssembledLines++] = getInstructionString(instruction, currentAddress);
-                    assembledLines[numAssembledLines++] = getInstructionString(operand, currentAddress);
-                    printf("%s\n", extractedLines[i]);
-                    printf("CURRENT: %s\n", branchKeys[0]);
-                    printf("CURRENT: %s\n", branchKeys[1]);
-                    break;
                 }
             }
             if (token != NULL)
@@ -208,6 +162,27 @@ int checkValidAddress(char *instruction, unsigned int operand)
     {
         return 1;
     }
+}
+
+unsigned int findBranch(char *stringOperand, char **extractedLines, unsigned int *currentAddress, int numLines, int currentLine)
+{
+    unsigned int operand = 0x00;
+    if (stringOperand)
+    {
+        if (strcmp(stringOperand, ";") != 0)
+        {
+            for (int k = currentLine + 1; k < numLines; k++)
+            {
+                char *branchFound = strstr(extractedLines[k], stringOperand);
+                if (branchFound)
+                {
+                    operand = (*currentAddress) + (2 * (k - currentLine));
+                    break;
+                }
+            }
+        }
+    }
+    return operand;
 }
 
 char *getInstructionString(unsigned int instruction, unsigned int *currentAddress)
