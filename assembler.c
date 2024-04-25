@@ -25,7 +25,6 @@ int assembleToC(char **assembledLines, char **extractedLines, int numLines)
     unsigned int startingAddress = getStartingAddress(extractedLines, numLines);
     if (eopExists && startingAddress < 0xFFFF)
     {
-        char **branchKeys = malloc(numLines * sizeof(char *));
         int numAssembledLines = convertAsmToC(assembledLines, extractedLines, numLines, startingAddress);
         return numAssembledLines;
     }
@@ -108,30 +107,41 @@ int convertAsmToC(char **assembledLines, char **extractedLines, int numLines, un
                 {
                     instruction = INSTRUCTION_TO_HEX_VALUES[j].opcode;
                     char *stringOperand = strtok(NULL, " \t");
-                    int parsed = sscanf(stringOperand, "%x", &operand);
-                    validAddress = checkValidAddress(token, operand);
-                    if (validAddress)
+                    if (stringOperand != NULL)
                     {
-                        if (INSTRUCTION_TO_HEX_VALUES[j].needs_adding && parsed == 1)
+                        int parsed = sscanf(stringOperand, "%x", &operand);
+                        validAddress = checkValidAddress(token, operand);
+                        if (validAddress)
                         {
-                            unsigned int current_instruction = (instruction << 8) + operand;
-                            instruction = (current_instruction >> 8) & 0xFF;
-                            operand = current_instruction & 0xFF;
+                            if (INSTRUCTION_TO_HEX_VALUES[j].needs_adding && parsed == 1)
+                            {
+                                unsigned int current_instruction = (instruction << 8) + operand;
+                                instruction = (current_instruction >> 8) & 0xFF;
+                                operand = current_instruction & 0xFF;
+                            }
+                            else if (parsed != 1)
+                            {
+                                operand = findBranch(stringOperand, extractedLines, currentAddress, numLines, i);
+                            }
+                            token = NULL;
+                            assembledLines[numAssembledLines++] = getInstructionString(instruction, currentAddress);
+                            assembledLines[numAssembledLines++] = getInstructionString(operand, currentAddress);
+                            break;
                         }
-                        else if (parsed != 1)
+                        else
                         {
-                            operand = findBranch(stringOperand, extractedLines, currentAddress, numLines, i);
+                            free(assembledLines);
+                            assembledLines = NULL;
+                            return 0;
                         }
+                    }
+                    else
+                    {
+                        operand = 0x00;
                         token = NULL;
                         assembledLines[numAssembledLines++] = getInstructionString(instruction, currentAddress);
                         assembledLines[numAssembledLines++] = getInstructionString(operand, currentAddress);
                         break;
-                    }
-                    else
-                    {
-                        free(assembledLines);
-                        assembledLines = NULL;
-                        return 0;
                     }
                 }
             }
