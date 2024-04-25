@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #define FILE_PATH "./data/assembly.asm"
 
 int getLinesFromFile(FILE *currentFile, char **lines);
@@ -13,10 +12,7 @@ int main()
     int numLines = getLinesFromFile(currentFile, lines);
     if (numLines > 0)
     {
-        for (int i = 0; i < numLines; i++)
-        {
-            printf("%s\n", lines[i]);
-        }
+        char assembledLines[numLines][1024];
     }
     else
     {
