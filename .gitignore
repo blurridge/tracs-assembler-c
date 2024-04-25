@@ -2,3 +2,4 @@
 .vscode
 main
 tempCodeRunner.c
+.DS_Store
