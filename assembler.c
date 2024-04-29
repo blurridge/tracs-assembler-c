@@ -109,19 +109,20 @@ int convertAsmToC(char **assembledLines, char **extractedLines, int numLines, un
                     char *stringOperand = strtok(NULL, " \t");
                     if (stringOperand != NULL)
                     {
-                        int parsed = sscanf(stringOperand, "%x", &operand);
+                        char prefix[3] = {0};
+                        int parsed = sscanf(stringOperand, "%2s%x", prefix, &operand);
                         validAddress = checkValidAddress(token, operand);
                         if (validAddress)
                         {
-                            if (INSTRUCTION_TO_HEX_VALUES[j].needs_adding && parsed == 1)
+                            if (strcmp(prefix, "0x") != 0)
+                            {
+                                operand = findBranch(stringOperand, extractedLines, currentAddress, numLines, i);
+                            }
+                            if (INSTRUCTION_TO_HEX_VALUES[j].needs_adding)
                             {
                                 unsigned int current_instruction = (instruction << 8) + operand;
                                 instruction = (current_instruction >> 8) & 0xFF;
                                 operand = current_instruction & 0xFF;
-                            }
-                            else if (parsed != 1)
-                            {
-                                operand = findBranch(stringOperand, extractedLines, currentAddress, numLines, i);
                             }
                             token = NULL;
                             assembledLines[numAssembledLines++] = getInstructionString(instruction, currentAddress);
@@ -177,14 +178,14 @@ unsigned int findBranch(char *stringOperand, char **extractedLines, unsigned int
     {
         if (strcmp(stringOperand, ";") != 0)
         {
-            for (int k = currentLine + 1; k < numLines; k++)
+            for (int k = 1; k < numLines; k++)
             {
                 char *branchFound = strstr(extractedLines[k], stringOperand);
-                if (branchFound)
+                if (branchFound && currentLine != k)
                 {
-                    operand = (*currentAddress) + (2 * (k - currentLine));
-                    break;
+                    return operand;
                 }
+                operand += 2;
             }
         }
     }

@@ -3,3 +3,5 @@
 main
 tempCodeRunner.c
 .DS_Store
+/data
+/output
