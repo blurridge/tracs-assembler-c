@@ -85,11 +85,12 @@ int convertAsmToC(char **assembledLines, char **extractedLines, int numLines, un
     int i, j, numAssembledLines = 0;
 
     unsigned int *currentAddress = &startingAddress;
-    int validAddress = 1;
+    int validAddress = 1, orgFlag = 0;
     char *token;
     char tempLine[256];
-    for (i = 1; i < numLines; i++)
+    for (i = 0; i < numLines; i++)
     {
+        orgFlag = 0;
         unsigned int instruction, operand;
         strcpy(tempLine, extractedLines[i]);
         token = strtok(tempLine, " \t");
@@ -99,10 +100,15 @@ int convertAsmToC(char **assembledLines, char **extractedLines, int numLines, un
             return 0;
         }
 
-        while (token != NULL)
+        while (token != NULL && !orgFlag)
         {
             for (j = 0; j < NUM_INSTRUCTIONS; j++)
             {
+                if(strcmp(token, "ORG") == 0)
+                {
+                    orgFlag = 1;
+                    break;
+                }
                 if (strcmp(token, INSTRUCTION_TO_HEX_KEYS[j]) == 0)
                 {
                     instruction = INSTRUCTION_TO_HEX_VALUES[j].opcode;
