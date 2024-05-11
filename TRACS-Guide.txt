@@ -1,0 +1,17 @@
+## Run Locally
+
+1. Go to the project directory
+```bash
+  cd tracs-assembler-c
+```
+2. Place `.asm` files in the `/data` folder.
+3. Compile the project
+
+```bash
+  gcc main.c assembler.c -o main
+```
+4. Run the project
+
+```bash
+  ./main
+```

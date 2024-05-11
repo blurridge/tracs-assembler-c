@@ -30,7 +30,7 @@ Therefore, its machine code equivalent is `0000 1100 0000 0010` or `0x0C02`. The
 ```
 2. Go to the project directory
 ```bash
-  cd tracs-assembler-py
+  cd tracs-assembler-c
 ```
 3. Place `.asm` files in the `/data` folder.
 4. Compile the project
